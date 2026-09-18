@@ -59,6 +59,7 @@ contract LandRegistryPrototype is AccessControl, Pausable {
     }
 
     mapping(bytes32 => Application) private _applications;
+    mapping(bytes32 => bool) private _applicationExists;
     mapping(bytes32 => uint64) private _currentVersion;
     mapping(bytes32 => mapping(uint64 => ParcelVersion)) private _versions;
     mapping(bytes32 => Dispute) private _disputes;
@@ -135,7 +136,7 @@ contract LandRegistryPrototype is AccessControl, Pausable {
         _requireNonZero(sourceManifestHash);
         _requireNonZero(spatialRefHash);
 
-        if (_applications[applicationId].status != ApplicationStatus.None) revert ApplicationAlreadyExists();
+        if (_applicationExists[applicationId]) revert ApplicationAlreadyExists();
         if (_currentVersion[parcelId] != 0) revert ParcelAlreadyRegistered();
 
         _applications[applicationId] = Application({
@@ -152,6 +153,7 @@ contract LandRegistryPrototype is AccessControl, Pausable {
             administrativeVerified: false
         });
 
+        _applicationExists[applicationId] = true;
         emit ApplicationSubmitted(applicationId, parcelId, ApplicationType.Registration, 0, msg.sender);
     }
 
@@ -166,7 +168,7 @@ contract LandRegistryPrototype is AccessControl, Pausable {
         _requireNonZero(proposedHolderIdHash);
         _requireNonZero(sourceManifestHash);
 
-        if (_applications[applicationId].status != ApplicationStatus.None) revert ApplicationAlreadyExists();
+        if (_applicationExists[applicationId]) revert ApplicationAlreadyExists();
 
         uint64 version = _currentVersion[parcelId];
         if (version == 0) revert ParcelNotRegistered();
@@ -189,6 +191,7 @@ contract LandRegistryPrototype is AccessControl, Pausable {
             administrativeVerified: false
         });
 
+        _applicationExists[applicationId] = true;
         emit ApplicationSubmitted(applicationId, parcelId, ApplicationType.Transfer, version, msg.sender);
     }
 
@@ -355,9 +358,8 @@ contract LandRegistryPrototype is AccessControl, Pausable {
     }
 
     function getApplication(bytes32 applicationId) external view returns (Application memory) {
-        Application memory application = _applications[applicationId];
-        if (application.status == ApplicationStatus.None) revert ApplicationNotFound();
-        return application;
+        if (!_applicationExists[applicationId]) revert ApplicationNotFound();
+        return _applications[applicationId];
     }
 
     function getCurrentVersion(bytes32 parcelId) external view returns (uint64) {
@@ -381,8 +383,8 @@ contract LandRegistryPrototype is AccessControl, Pausable {
     }
 
     function _getPendingApplication(bytes32 applicationId) internal view returns (Application storage application) {
+        if (!_applicationExists[applicationId]) revert ApplicationNotFound();
         application = _applications[applicationId];
-        if (application.status == ApplicationStatus.None) revert ApplicationNotFound();
         if (application.status != ApplicationStatus.Submitted) revert ApplicationNotPending();
     }
 
