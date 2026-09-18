@@ -8,7 +8,8 @@
     "test": "hardhat test",
     "clean": "hardhat clean",
     "benchmark": "hardhat run scripts/benchmark.js",
-    "generate:synthetic": "hardhat run scripts/generate-synthetic-dataset.js"
+    "generate:synthetic": "hardhat run scripts/generate-synthetic-dataset.js",
+    "benchmark:testnet": "hardhat run scripts/testnet-benchmark.js --network sepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "5.0.0",
