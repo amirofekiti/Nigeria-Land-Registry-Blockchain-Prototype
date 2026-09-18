@@ -1,11 +1,13 @@
 {
   "name": "nigeria-land-registry-blockchain-prototype",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Research prototype for a hybrid blockchain-assisted land administration framework in Nigeria",
   "scripts": {
     "compile": "hardhat compile",
-    "test": "hardhat test",
+    "test": "hardhat test test/LandRegistryPrototype.test.js",
+    "test:property": "hardhat test test/LandRegistryPrototype.property.test.js",
+    "test:all": "hardhat test",
     "clean": "hardhat clean",
     "benchmark": "hardhat run scripts/benchmark.js",
     "generate:synthetic": "hardhat run scripts/generate-synthetic-dataset.js",
@@ -14,6 +16,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "5.0.0",
     "@openzeppelin/contracts": "5.6.1",
+    "fast-check": "4.10.1",
     "hardhat": "2.28.0"
   }
 }
