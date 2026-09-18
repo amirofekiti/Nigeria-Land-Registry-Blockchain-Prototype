@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '10' }}
+      BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '30' }}
       SYNTHETIC_PARTIES: "1000"
       SYNTHETIC_PARCELS: "10000"
 
