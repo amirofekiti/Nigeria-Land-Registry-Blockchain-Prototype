@@ -6,7 +6,10 @@ on:
       iterations:
         description: "Number of Sepolia workflow repetitions (1-10)"
         required: true
-        default: "3"
+        default: "10"
+  push:
+    branches:
+      - phase3-final-eval
 
 jobs:
   sepolia-experiment:
@@ -15,7 +18,7 @@ jobs:
     env:
       SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
       SEPOLIA_PRIVATE_KEY: ${{ secrets.SEPOLIA_PRIVATE_KEY }}
-      TESTNET_ITERATIONS: ${{ github.event.inputs.iterations }}
+      TESTNET_ITERATIONS: ${{ github.event.inputs.iterations || '10' }}
 
     steps:
       - name: Checkout repository
