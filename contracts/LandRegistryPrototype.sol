@@ -78,6 +78,12 @@ contract LandRegistryPrototype is AccessControl, Pausable {
         uint64 newVersion,
         address indexed authorisedBy
     );
+    event ApplicationRejected(
+        bytes32 indexed applicationId,
+        bytes32 indexed parcelId,
+        address indexed rejectedBy,
+        uint64 rejectedAt
+    );
     event ParcelVersionCreated(
         bytes32 indexed parcelId,
         uint64 indexed version,
@@ -201,6 +207,12 @@ contract LandRegistryPrototype is AccessControl, Pausable {
     function rejectApplication(bytes32 applicationId) external onlyRole(AUTHORISER_ROLE) whenNotPaused {
         Application storage application = _getPendingApplication(applicationId);
         application.status = ApplicationStatus.Rejected;
+        emit ApplicationRejected(
+            applicationId,
+            application.parcelId,
+            msg.sender,
+            uint64(block.timestamp)
+        );
     }
 
     function authoriseApplication(bytes32 applicationId) external onlyRole(AUTHORISER_ROLE) whenNotPaused {
