@@ -1,0 +1,55 @@
+name: Phase 2C Sepolia Experiment
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Number of Sepolia workflow repetitions (1-10)"
+        required: true
+        default: "3"
+
+jobs:
+  sepolia-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+      SEPOLIA_PRIVATE_KEY: ${{ secrets.SEPOLIA_PRIVATE_KEY }}
+      TESTNET_ITERATIONS: ${{ github.event.inputs.iterations }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify required testnet secrets exist
+        shell: bash
+        run: |
+          test -n "$SEPOLIA_RPC_URL" || (echo "SEPOLIA_RPC_URL is not configured" && exit 1)
+          test -n "$SEPOLIA_PRIVATE_KEY" || (echo "SEPOLIA_PRIVATE_KEY is not configured" && exit 1)
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Run local validation suite
+        run: npm test
+
+      - name: Run Sepolia experiment
+        run: npm run benchmark:testnet
+
+      - name: Upload Sepolia experiment artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2c-sepolia-${{ github.run_id }}
+          path: |
+            experiments/results/testnet-results.json
+            experiments/results/testnet-raw.csv
+          if-no-files-found: error
+          retention-days: 90
