@@ -1,0 +1,89 @@
+name: Phase 2D Security Analysis
+
+on:
+  push:
+    branches:
+      - phase2d-security
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  property-invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      FC_SEED: "20260918"
+      FC_NUM_RUNS: "100"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Run deterministic property/invariant suite
+        run: npm run test:property
+
+  slither-static-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install JavaScript dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Install Slither
+        run: pip install "slither-analyzer==0.11.6"
+
+      - name: Record Slither version
+        run: slither --version
+
+      - name: Run Slither static analysis
+        shell: bash
+        run: |
+          mkdir -p security/results
+          set +e
+          slither .             --exclude-dependencies             --filter-paths "node_modules|artifacts|cache"             --json security/results/slither-report.json
+          SLITHER_STATUS=$?
+          set -e
+          echo "Slither raw exit code: $SLITHER_STATUS"
+          test -s security/results/slither-report.json
+
+      - name: Gate High and Medium findings
+        run: python scripts/slither-gate.py security/results/slither-report.json
+
+      - name: Upload Slither report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2d-slither-${{ github.run_id }}
+          path: security/results/slither-report.json
+          if-no-files-found: warn
+          retention-days: 90
