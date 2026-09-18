@@ -5,3 +5,7 @@ cache/
 coverage/
 typechain-types/
 .DS_Store
+
+# Generated research experiment data
+experiments/results/
+experiments/data/*.csv

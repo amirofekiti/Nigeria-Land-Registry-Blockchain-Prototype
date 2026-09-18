@@ -1,0 +1,60 @@
+name: Phase 2C Benchmark
+
+on:
+  push:
+    branches:
+      - main
+      - phase2c-experiments
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Benchmark repetitions per workflow item"
+        required: false
+        default: "30"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BENCH_ITERATIONS: ${{ github.event.inputs.iterations || '30' }}
+      SYNTHETIC_PARTIES: "1000"
+      SYNTHETIC_PARCELS: "10000"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Run validation tests
+        run: npm test
+
+      - name: Generate deterministic synthetic dataset
+        run: npm run generate:synthetic
+
+      - name: Run controlled local benchmark
+        run: npm run benchmark
+
+      - name: Upload Phase 2C experiment artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2c-experiment-${{ github.run_id }}
+          path: |
+            experiments/results/*.json
+            experiments/results/*.csv
+            experiments/data/*.csv
+          if-no-files-found: error
+          retention-days: 90
