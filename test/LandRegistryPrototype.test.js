@@ -262,7 +262,9 @@ describe("LandRegistryPrototype — Phase 2B", function () {
       const data = await submitRegistration(ctx, "REJECTED");
       await ctx.contract.connect(ctx.surveyor).verifySurvey(data.applicationId);
       await ctx.contract.connect(ctx.registry).verifyAdministrative(data.applicationId);
-      await ctx.contract.connect(ctx.authoriser).rejectApplication(data.applicationId);
+      await expect(
+        ctx.contract.connect(ctx.authoriser).rejectApplication(data.applicationId)
+      ).to.emit(ctx.contract, "ApplicationRejected");
 
       const application = await ctx.contract.getApplication(data.applicationId);
       expect(application.status).to.equal(3n);
